@@ -1,0 +1,128 @@
+# Basic configuration for docker-compose.yml file
+services:
+  # Server service container configuration for nestjs application
+  server:
+    container_name: server
+    build: ./
+    restart: always
+    networks:
+      - server-mongo # connect to specific network between server and mongodb
+      - server-redis # connect to specific network between server and redis
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/app # mount current directory to /app directory in container
+    env_file:
+      - ./.env
+    depends_on: # depend on initReplica and redis service container to be healthy
+      - initReplica
+      - redis
+    environment:
+      - NODE_ENV=dev
+    command: 'npm run start:dev'
+
+  # Redis service container configuration
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: always
+    networks:
+      - server-redis
+    expose:
+      - 6379
+    volumes:
+      - redisdb:/data
+    healthcheck:
+      test: echo 'PING' | redis-cli
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # create mongodb pimary node service container configuration
+  mongodb-primary:
+    container_name: mongodb-primary
+    image: mongo:4.4.28
+    restart: always
+    networks:
+      - server-mongo
+    expose:
+      - 27017
+    volumes:
+      - mongodb-prime:/data/db
+    healthcheck: # health check for mongodb primary node
+      test: echo 'db.runCommand("ping")' | mongo mongodb-primary:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    command: mongod --replSet ideanest-rs --bind_ip_all --port 27017
+
+  # create first mongodb secondary node service container configuration
+  mongodb-secondary1:
+    container_name: mongodb-secondary1
+    image: mongo:4.4.28
+    restart: always
+    networks:
+      - server-mongo
+    expose:
+      - 27017
+    volumes:
+      - mongodb-sec1:/data/db
+    healthcheck: # health check for mongodb secondary node
+      test: echo 'db.runCommand("ping")' | mongo mongodb-secondary1:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    command: mongod --replSet ideanest-rs --bind_ip_all --port 27017
+
+  # create second mongodb secondary node service container configuration
+  mongodb-secondary2:
+    container_name: mongodb-secondary2
+    image: mongo:4.4.28
+    restart: always
+    networks:
+      - server-mongo
+    expose:
+      - 27017
+    volumes:
+      - mongodb-sec2:/data/db
+    healthcheck: # health check for mongodb secondary node
+      test: echo 'db.runCommand("ping")' | mongo mongodb-secondary2:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    command: mongod --replSet ideanest-rs --bind_ip_all --port 27017
+
+  # Create initReplica service container for replica set configuration and initialization then exit
+  initReplica:
+    image: mongo:4.4.28
+    container_name: initReplica
+    depends_on:
+      mongodb-primary:
+        condition: service_healthy
+      mongodb-secondary1:
+        condition: service_healthy
+      mongodb-secondary2:
+        condition: service_healthy
+    networks:
+      - server-mongo
+    volumes: # mount init-replica.sh file to /init-replica.sh in container
+      - ./init-replica.sh:/init-replica.sh
+    entrypoint: ['/bin/bash', '/init-replica.sh'] # run init-replica.sh file in container
+
+# create network with name of server-mongo
+networks:
+  server-mongo:
+    name: server-mongo
+  server-redis:
+    name: server-redis
+
+# volumes configuration
+volumes:
+  mongodb-prime:
+    name: mongodb-prime
+  mongodb-sec1:
+    name: mongodb-sec1
+  mongodb-sec2:
+    name: mongodb-sec2
+  redisdb:
+    name: redisdb
