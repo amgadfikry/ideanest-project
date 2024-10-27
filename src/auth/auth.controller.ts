@@ -4,6 +4,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { SigninDto } from './dto/signin.dto';
 import { ReturnSigninDto } from './dto/return-signin.dto';
+import { ApiErrorResponses } from '../common/decorators/api-error-response.decorator';
 
 /* AuthController class that contains routes for authentication
     Routes:
@@ -28,9 +29,7 @@ export class AuthController {
   @Post('signin')
   @ApiOperation({ summary: 'Signin for the user' })
   @ApiResponse({ status: 200, description: 'Signin successfully', type: ReturnSigninDto })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 500]) // Add error responses to the Swagger documentation
   async signin(@Body() signinDto: SigninDto, @Res() res: Response) : Promise<Response> {
     const returnSigninDto = await this.authService.signin(signinDto);
     // set token in cookie
@@ -42,9 +41,7 @@ export class AuthController {
   @Post('refresh-token')
   @ApiOperation({ summary: 'Refresh token for the user' })
   @ApiResponse({ status: 200, description: 'Refresh token successfully', type: ReturnSigninDto })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 500]) // Add error responses to the Swagger documentation
   async refreshToken(@Req() req: any, @Res() res: Response) : Promise<Response> {
     // get refresh token from cookie
     const refreshToken = req.cookies['token'];
@@ -58,9 +55,7 @@ export class AuthController {
   @Post('signout')
   @ApiOperation({ summary: 'Signout for the user' })
   @ApiResponse({ status: 200, description: 'Signout successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 500]) // Add error responses to the Swagger documentation
   async signout(@Res() res: Response, @Req() req: any) : Promise<Response> {
     // get refresh token from cookie
     const refreshToken = req.cookies['token'];

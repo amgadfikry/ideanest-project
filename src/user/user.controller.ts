@@ -2,6 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiErrorResponses } from '../common/decorators/api-error-response.decorator';
 
 // UserController class that contains routes for user
 @ApiTags('User')
@@ -16,9 +17,7 @@ export class UserController {
   @Post('signup')
   @ApiOperation({ summary: 'Signup for the user' })
   @ApiResponse({ status: 200, description: 'Signed up successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 409, description: 'Conflict' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 409, 500]) // Custom decorator for error responses
   async signup(@Body() createUserDto: CreateUserDto) : Promise<{ message: string }> {
     return await this.userService.create(createUserDto);
   }

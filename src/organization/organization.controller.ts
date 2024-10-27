@@ -7,6 +7,7 @@ import { TransformInterceptor } from '../interceptors/transform.interceptor';
 import { ReturnedOrganizationDto } from './dto/returned_organization.dto';
 import { AuthGuard } from '../guards/auth.guard';
 import { InviteUserDto } from './dto/invite-user.dto';
+import { ApiErrorResponses } from '../common/decorators/api-error-response.decorator';
 
 // organization controller that contains routes for organization
 @ApiTags('Organization')
@@ -24,9 +25,7 @@ export class OrganizationController {
   @UseInterceptors(new TransformInterceptor(ReturnedOrganizationDto)) // transform the response data to the ReturnedOrganizationDto
   @ApiOperation({ summary: 'Create organization for the user' })
   @ApiResponse({ status: 200, description: 'Organization created successfully', type: ReturnedOrganizationDto })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 500]) // apply custom error responses
   async create(@Body() createOrganizationDto: CreateOrganizationDto, @Req() req: any){
     return await this.organizationService.create(createOrganizationDto, req.user);
   }
@@ -37,8 +36,7 @@ export class OrganizationController {
   @UseInterceptors(new TransformInterceptor(ReturnedOrganizationDto)) // transform the response data to the ReturnedOrganizationDto
   @ApiOperation({ summary: 'Get all organizations' })
   @ApiResponse({ status: 200, description: 'Return all organizations', type: [ReturnedOrganizationDto] })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([401, 500]) // apply custom error responses
   async findAll() {
     return await this.organizationService.findAll();
   }
@@ -49,9 +47,7 @@ export class OrganizationController {
   @UseInterceptors(new TransformInterceptor(ReturnedOrganizationDto)) // transform the response data to the ReturnedOrganizationDto
   @ApiOperation({ summary: 'Get organization by id' })
   @ApiResponse({ status: 200, description: 'Return organization by id', type: ReturnedOrganizationDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Organization not found' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 500]) // apply custom error responses
   async findOne(@Param('id') id: string) {
     return await this.organizationService.findOne(id);
   }
@@ -62,10 +58,7 @@ export class OrganizationController {
   @UseInterceptors(new TransformInterceptor(ReturnedOrganizationDto)) // transform the response data to the ReturnedOrganizationDto
   @ApiOperation({ summary: 'Update organization by id' })
   @ApiResponse({ status: 200, description: 'Organization updated successfully', type: ReturnedOrganizationDto })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Organization not found' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 404, 500]) // apply custom error responses
   async update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto, @Req() req: any) {
     return await this.organizationService.update(id, updateOrganizationDto, req.user);
   }
@@ -75,9 +68,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard) // protect the route with JWT authentication
   @ApiOperation({ summary: 'Delete organization by id' })
   @ApiResponse({ status: 200, description: 'Organization deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Organization not found' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 500]) // apply custom error responses
   async remove(@Param('id') id: string, @Req() req: any) {
     return await this.organizationService.remove(id, req.user);
   }
@@ -87,10 +78,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard) // protect the route with JWT authentication
   @ApiOperation({ summary: 'Invite user to organization' })
   @ApiResponse({ status: 200, description: 'User invited successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Organization not found' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiErrorResponses([400, 401, 404, 500]) // apply custom error responses
   async inviteUser(@Param('id') id: string, @Body() inviteUserDto: InviteUserDto, @Req() req: any) {
     return await this.organizationService.addMember(id, inviteUserDto, req.user);
   } 
